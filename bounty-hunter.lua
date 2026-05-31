@@ -1,4 +1,129 @@
--- Script Tự Săn Bounty Blox Fruits - Bản Hoàn Chỉnh
+-- ============================================
+-- Script Bounty Hunter Blox Fruits + Anti-Ban
+-- Cấu hình: Trái ác (Fruit) là sát thương chính, spam liên tục
+-- ============================================
+
+-- // ANTI-BAN (Bảo vệ chống phát hiện) //
+do
+    local AntiBan = {
+        DisableAC = true,
+        Humanize = true,
+        BlockAntiCheatRemotes = true,
+        FakePing = true,
+        AutoLeaveAdmin = true,
+        ClearLogs = true,
+        SafeTeleport = true,
+        HeartbeatVariance = 2.5,
+    }
+
+    local player = game.Players.LocalPlayer
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local runService = game:GetService("RunService")
+    local virtualInput = game:GetService("VirtualInputManager")
+    local logService = game:GetService("LogService")
+
+    if AntiBan.DisableAC then
+        pcall(function()
+            if getgenv().hookfunction then
+                getgenv().hookfunction(game.FindFirstChild, function(...) return nil end)
+            end
+        end)
+    end
+
+    if AntiBan.Humanize then
+        spawn(function()
+            while true do
+                local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = humanoid.WalkSpeed + (math.random(-1,1) * 0.05)
+                    humanoid.JumpPower = humanoid.JumpPower + (math.random(-2,2) * 0.01)
+                end
+                task.wait(math.random(30,60)/10)
+            end
+        end)
+    end
+
+    if AntiBan.BlockAntiCheatRemotes then
+        pcall(function()
+            for _, remote in ipairs(replicatedStorage:GetDescendants()) do
+                if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+                    local name = remote.Name:lower()
+                    if name:find("anti") or name:find("cheat") or name:find("detect") then
+                        remote:Destroy()
+                    end
+                end
+            end
+        end)
+    end
+
+    if AntiBan.FakePing then
+        pcall(function()
+            if setfpscap then setfpscap(60) end
+            if setidentity then setidentity(8) end
+        end)
+    end
+
+    if AntiBan.AutoLeaveAdmin then
+        spawn(function()
+            while true do
+                for _, p in ipairs(game.Players:GetPlayers()) do
+                    if p:GetRoleInGroup(1) == "Admin" or p.Name:lower():find("admin") then
+                        game:Shutdown()
+                    end
+                end
+                task.wait(5)
+            end
+        end)
+    end
+
+    if AntiBan.ClearLogs then
+        pcall(function()
+            logService:ClearLogs()
+            task.spawn(function()
+                while true do
+                    logService:ClearLogs()
+                    task.wait(30)
+                end
+            end)
+        end)
+    end
+
+    if AntiBan.SafeTeleport then
+        local oldCFrame = getrenv().CFrame
+        getrenv().CFrame = function(pos)
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local currentPos = char.HumanoidRootPart.Position
+                local distance = (pos.p - currentPos).Magnitude
+                if distance > 1000 then
+                    for i=1,10 do
+                        local step = currentPos:Lerp(pos.p, i/10)
+                        char.HumanoidRootPart.CFrame = CFrame.new(step)
+                        task.wait(0.05)
+                    end
+                else
+                    char.HumanoidRootPart.CFrame = pos
+                end
+            end
+        end
+    end
+
+    if AntiBan.HeartbeatVariance > 0 then
+        local lastBeat = tick()
+        runService.Heartbeat:Connect(function()
+            local elapsed = tick() - lastBeat
+            if elapsed > 1/AntiBan.HeartbeatVariance then
+                virtualInput:SendKeyEvent(true, "F1", false, game)
+                task.wait(0.05)
+                virtualInput:SendKeyEvent(false, "F1", false, game)
+                lastBeat = tick()
+            end
+        end)
+    end
+    print("Anti-ban module loaded.")
+end
+
+-- // CẤU HÌNH SĂN BOUNTY - FRUIT LÀ SÁT THƯƠNG CHÍNH //
 getgenv().BountyConfig = {
     Setup = {
         ['PC-er'] = false,
@@ -15,7 +140,7 @@ getgenv().BountyConfig = {
         ['Lock Cam'] = false,
         ['Hop Region'] = 'Singapore',
         ['Random Y Tween'] = false,
-        ['Click Delay'] = 0.18
+        ['Click Delay'] = 0.15  -- Giảm nhẹ delay để spam nhanh hơn
     },
     Hunter = {
         ['Ignore'] = {
@@ -41,26 +166,26 @@ getgenv().BountyConfig = {
     },
     Skills = {
         ['Melee'] = {
-            ['Enabled'] = {true, true},
-            ['Z'] = {true, 1.5, 0},
-            ['X'] = {true, 0, 0},
-            ['C'] = {true, 0, 0}
+            ['Enabled'] = {true, true},  -- Vẫn bật để spam thêm
+            ['Z'] = {true, 0.5, 0},
+            ['X'] = {true, 0.5, 0},
+            ['C'] = {true, 0.5, 0}
         },
         ['Blox Fruit'] = {
-            ['Enabled'] = {false, false},
+            ['Enabled'] = {true, true},  -- BẬT FRUIT LÀM SÁT THƯƠNG CHÍNH
             ['Z'] = {true, 0, 0},
             ['X'] = {true, 0, 0},
             ['C'] = {true, 0, 0},
-            ['V'] = {false, 0, 0},
-            ['F'] = {true, 0, 0}
+            ['V'] = {true, 0, 0},        -- Bật V (thường là chiêu thức di chuyển/sát thương)
+            ['F'] = {true, 0, 0}         -- Bật F (thường là kỹ năng bay/sát thương)
         },
         ['Sword'] = {
-            ['Enabled'] = {false, false},
+            ['Enabled'] = {false, false}, -- Tắt kiếm để tập trung vào fruit
             ['Z'] = {true, 0.5, 0},
             ['X'] = {true, 0, 0},
         },
         ['Gun'] = {
-            ['Enabled'] = {true, true},
+            ['Enabled'] = {true, true},  -- Vẫn dùng súng để spam thêm áp lực
             ['Z'] = {true, 0, 0},
             ['X'] = {true, 0, 0},
         }
@@ -68,11 +193,19 @@ getgenv().BountyConfig = {
     Macro = {
         ['Enabled'] = true,
         ['Skills'] = {
-            [1] = {'Melee', {'Z'}},
-            [2] = {'Gun', {'Z'}},
-            [3] = {'Melee', {'C'}},
-            [4] = {'Gun', {'X'}},
-            [5] = {'Melee', {'X'}}
+            -- Chuỗi spam ưu tiên Trái ác, kết hợp đòn đánh khác để gây nhiễu
+            [1] = {'Blox Fruit', {'Z'}},   -- Fruit Z
+            [2] = {'Blox Fruit', {'X'}},   -- Fruit X
+            [3] = {'Blox Fruit', {'C'}},   -- Fruit C
+            [4] = {'Blox Fruit', {'V'}},   -- Fruit V
+            [5] = {'Gun', {'Z'}},          -- Súng Z
+            [6] = {'Blox Fruit', {'F'}},   -- Fruit F
+            [7] = {'Melee', {'Z'}},        -- Cận chiến Z
+            [8] = {'Blox Fruit', {'Z'}},   -- Lại Fruit Z
+            [9] = {'Blox Fruit', {'X'}},   -- Fruit X
+            [10] = {'Gun', {'X'}},         -- Súng X
+            [11] = {'Blox Fruit', {'C'}},  -- Fruit C
+            [12] = {'Melee', {'X'}},       -- Cận chiến X
         }
     },
     Counter = {
@@ -91,6 +224,7 @@ getgenv().BountyConfig = {
     }
 }
 
+-- // BOUNTY HUNTER ENGINE //
 local cfg = getgenv().BountyConfig
 local players = game:GetService("Players")
 local runService = game:GetService("RunService")
@@ -339,6 +473,7 @@ local function mainLoop()
 end
 
 if cfg.Booster["Hide Gui"] then
+    -- Ẩn GUI (nếu có)
 end
 if cfg.Booster["Hide Map"] then
     pcall(function()
@@ -351,6 +486,7 @@ if cfg.Booster["Hide Map"] then
     end)
 end
 if cfg.Booster["White Screen"] then
+    -- Màn trắng (có thể thêm)
 end
 
 runService.Heartbeat:Connect(function()
